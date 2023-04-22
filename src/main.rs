@@ -9,6 +9,7 @@ use regex::Regex;
 //use serde_json::{Key, Value};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+const STOCKSELL_REGEX: &str = r"^\[(.+)\]\*(-?\d+)$";
 
 #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
 struct Product {
@@ -50,8 +51,34 @@ impl InventoryApp {
             product_list: json_object("./src/Products.json".to_owned()),
         }
     }
+    pub fn result_stock_or_sell(&self, code: String) -> Option<Vec<String>> {
+        let re = Regex::new(STOCKSELL_REGEX).unwrap();
+        if re.is_match(code.as_str()) {
+            let caps = re.captures(code.as_str()).unwrap();
+            if self.valid_sku(caps.get(1).unwrap().as_str().to_string()){
+                return Some(vec![caps.get(1).unwrap().as_str().to_string(), caps.get(2).unwrap().as_str().to_string()]);
+            }
+        }
+        None
+    }
+    pub fn action_stock_or_sell(&self, action: Vec<String>) {
+        let sku = &action[0];
+        let quantity: i32 = action[1].parse().unwrap();
+
+        if quantity > 0 {
+            println!("Stocking {} of {}", quantity, sku);
+        }
+        else if quantity < 0{
+            println!("Selling {} of {}", quantity, sku);
+        }
+        else {
+            println!("Giving away 1 of {}", sku);
+        }
+    }
     pub fn valid_action_code(&self, code: String) -> bool {
-        let re = Regex::new(r"^\[(.+)\]\*(-?\d+)$").unwrap();
+        let re = Regex::new(STOCKSELL_REGEX).unwrap();
+        //self.regex_quantity_result(code.clone());
+
         if re.is_match(code.as_str()) {
             return true;
         }
@@ -60,6 +87,7 @@ impl InventoryApp {
     pub fn valid_sku(&self, sku_to_check: String) -> bool {
         for each_product in self.product_list.iter() {
             if each_product.sku == sku_to_check {
+                //println!("Product found");
                 return true;
             }
         }
@@ -85,12 +113,9 @@ fn main() {
         if choice == "quit" {
             return ();
         }
-        else if product_scanner.valid_action_code(choice) {
-            println!("valid");
-            product_scanner.valid_sku("test".to_owned());
-        }
-        else {
-            println!("invalid");
+        match product_scanner.result_stock_or_sell(choice.clone()) {
+            Some(x) => product_scanner.action_stock_or_sell(x),
+            None => println!("Not valid"),
         }
     }
 
