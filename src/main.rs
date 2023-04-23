@@ -3,6 +3,7 @@ use std::io::stdin;
 use std::fs;
 use std::thread;
 use std::time::Duration;
+use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use yansi::{Paint,Color};
 use regex::Regex;
@@ -39,16 +40,16 @@ impl Product {
         }
     }
     pub fn sell_product(&mut self, negative: i32) {
-        //self.stock += negative;
-        //self.sold -= negative;
+        self.stock += negative;
+        self.sold -= negative;
         self.print_product(TransactionType::Sell);
     }
     pub fn stock_product(&mut self, positive: i32) {
-        //self.stock += positive;
+        self.stock += positive;
         self.print_product(TransactionType::Stock);
     }
     pub fn gift_product(&mut self) {
-        //self.stock -= 1;
+        self.stock -= 1;
         self.print_product(TransactionType::Gift);
     }
 
@@ -64,7 +65,7 @@ impl Product {
 #[derive(Debug)]
 struct InventoryApp {
     debug_state: bool,
-    product_list: Vec<Product>,
+    product_list: HashMap<String,Product>,
 }
 
 fn user_input() -> String {
@@ -79,9 +80,15 @@ fn load_json_to_string(file_path: String) -> String {
     fs::read_to_string(file_path).unwrap_or_default()
 }
 
-fn json_object(json_string: String) -> Vec<Product> {
-    serde_json::from_str(&load_json_to_string(json_string))
-    .unwrap_or_default()
+fn json_object(json_string: String) -> HashMap<String, Product> {
+    let product_vector: Vec<Product> = serde_json::from_str(&load_json_to_string(json_string))
+    .unwrap_or_default();
+    let mut prehash_map: Vec<(String,Product)> = vec![];
+
+    for each_product in product_vector {
+        prehash_map.push((each_product.sku.clone(),each_product));
+    }
+    prehash_map.into_iter().collect()
 }
 
 impl InventoryApp {
@@ -95,26 +102,24 @@ impl InventoryApp {
         let re = Regex::new(STOCKSELL_REGEX).unwrap();
         if re.is_match(code.as_str()) {
             let caps = re.captures(code.as_str()).unwrap();
-            if self.valid_sku(caps.get(1).unwrap().as_str().to_string()){
-                return Some(vec![caps.get(1).unwrap().as_str().to_string(), caps.get(2).unwrap().as_str().to_string()]);
-            }
+            return caps;
         }
         None
     }
-    pub fn action_stock_or_sell(&self, action: Vec<String>) {
+    /*pub fn action_stock_or_sell(&self, action: Vec<String>) {
         let sku = &action[0];
         let quantity: i32 = action[1].parse().unwrap();
 
-        for each_product in self.product_list.iter_mut() {
-            if *each_product.sku == sku.to_string() {
+        for each_product in &mut self.product_list {
+            if each_product.sku == sku.to_string() {
                 match quantity {
-                    x if x > 0 => each_product.stock_product(quantity),
+                    x if x > 0 =>{ each_product.stock += 1; each_product.stock_product(quantity)},
                     x if x < 0 => each_product.sell_product(quantity),
                     _ => each_product.gift_product(),
                 };
             }
         }
-    }
+    }*/
     pub fn valid_action_code(&self, code: String) -> bool {
         let re = Regex::new(STOCKSELL_REGEX).unwrap();
         //self.regex_quantity_result(code.clone());
@@ -124,18 +129,10 @@ impl InventoryApp {
         }
         return false;
     }
-    pub fn valid_sku(&self, sku_to_check: String) -> bool {
-        for each_product in self.product_list.iter() {
-            if each_product.sku == sku_to_check {
-                //println!("Product found");
-                return true;
-            }
-        }
-        false
-    }
 }
 
 fn main() {
+    let product_list: Vec<Product> = vec![];
     let _time_thread = thread::spawn(|| {
         loop {
             //println!("{}", Paint::green("Color and time check"));
@@ -153,10 +150,7 @@ fn main() {
         if choice == "quit" {
             return ();
         }
-        match product_scanner.result_stock_or_sell(choice.clone()) {
-            Some(x) => product_scanner.action_stock_or_sell(x),
-            None => println!("Not valid"),
-        }
+
     }
 
 }
