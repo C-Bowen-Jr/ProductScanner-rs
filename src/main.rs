@@ -39,21 +39,21 @@ impl Product {
             retired: false,
         }
     }
-    pub fn sell_product(&mut self, negative: i32) {
+    fn sell_product(&mut self, negative: i32) {
         self.stock += negative;
         self.sold -= negative;
         self.print_product(TransactionType::Sell);
     }
-    pub fn stock_product(&mut self, positive: i32) {
+    fn stock_product(&mut self, positive: i32) {
         self.stock += positive;
         self.print_product(TransactionType::Stock);
     }
-    pub fn gift_product(&mut self) {
+    fn gift_product(&mut self) {
         self.stock -= 1;
         self.print_product(TransactionType::Gift);
     }
 
-    pub fn print_product(&self, trans_type: TransactionType) {
+    fn print_product(&self, trans_type: TransactionType) {
         match trans_type {
             TransactionType::Stock => println!("{} [In Stock: {} Sold: {}]", Paint::green(&self.name), Paint::green(&self.stock), self.sold),
             TransactionType::Sell => println!("{} [In Stock: {} Sold: {}]", Paint::red(&self.name), self.stock, Paint::red(&self.sold)),
@@ -64,8 +64,26 @@ impl Product {
 
 #[derive(Debug)]
 struct InventoryApp {
-    debug_state: bool,
     product_list: HashMap<String,Product>,
+}
+
+impl InventoryApp {
+    fn new() -> Self {
+         Self {
+            product_list: json_object("./src/Products.json".to_owned()),
+        }
+    }
+    fn result_stock_or_sell(&self, code: String) -> Option<Vec<String>> {
+        let re = Regex::new(STOCKSELL_REGEX).unwrap();
+        if re.is_match(code.as_str()) {
+            let caps = re.captures(code.as_str()).unwrap();
+            return Some(vec![caps.get(1).unwrap().as_str().to_string(), caps.get(2).unwrap().as_str().to_string()]);
+        }
+        None
+    }
+    fn product_by_sku(&mut self, sku: &str) -> Option<&mut Product> {
+        self.product_list.get_mut(sku)
+    }
 }
 
 fn user_input() -> String {
@@ -88,58 +106,11 @@ fn json_object(json_string: String) -> HashMap<String, Product> {
     for each_product in product_vector {
         prehash_map.push((each_product.sku.clone(),each_product));
     }
+    println!("load from json: {:?}", prehash_map);
     prehash_map.into_iter().collect()
 }
 
-impl InventoryApp {
-    fn new() -> Self {
-         Self {
-            debug_state: true,
-            product_list: json_object("./src/Products.json".to_owned()),
-        }
-    }
-    pub fn result_stock_or_sell(&self, code: String) -> Option<Vec<String>> {
-        let re = Regex::new(STOCKSELL_REGEX).unwrap();
-        if re.is_match(code.as_str()) {
-            let caps = re.captures(code.as_str()).unwrap();
-            if self.valid_sku(caps.get(1).unwrap().as_str().to_string()){
-                return Some(vec![caps.get(1).unwrap().as_str().to_string(), caps.get(2).unwrap().as_str().to_string()]);
-            }
-        }
-        None
-    }
-    /*pub fn action_stock_or_sell(&self, action: Vec<String>) {
-        let sku = &action[0];
-        let quantity: i32 = action[1].parse().unwrap();
-
-        for each_product in &mut self.product_list {
-            if each_product.sku == sku.to_string() {
-                match quantity {
-                    x if x > 0 =>{ each_product.stock += 1; each_product.stock_product(quantity)},
-                    x if x < 0 => each_product.sell_product(quantity),
-                    _ => each_product.gift_product(),
-                };
-            }
-        }
-    }*/
-    pub fn valid_sku(&self, check_sku: String) -> bool{
-        if let Some(found) = self.product_list.get(check_sku) {
-
-        }
-    }
-    pub fn valid_action_code(&self, code: String) -> bool {
-        let re = Regex::new(STOCKSELL_REGEX).unwrap();
-        //self.regex_quantity_result(code.clone());
-
-        if re.is_match(code.as_str()) {
-            return true;
-        }
-        return false;
-    }
-}
-
 fn main() {
-    let product_list: Vec<Product> = vec![];
     let _time_thread = thread::spawn(|| {
         loop {
             //println!("{}", Paint::green("Color and time check"));
@@ -147,7 +118,7 @@ fn main() {
         }
     });
 
-    let product_scanner = InventoryApp::new();
+    let mut product_scanner = InventoryApp::new();
     println!("\n---{}--- {}{}", Paint::green("Inventory Server Product Scanner"), Paint::yellow("V."), Paint::yellow(VERSION));
     println!("Scan '{}' to add a new product.", Paint::blue("Q+[SKU](Product Name)#"));
     println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::blue("[SKU]*#"));
@@ -158,6 +129,22 @@ fn main() {
             return ();
         }
 
+        if let Some(found_sell_stock) = product_scanner.result_stock_or_sell(choice.clone()) {
+            if let Some(found_product) = product_scanner.product_by_sku(found_sell_stock[1].as_str()) {
+                let quantity: i32 = found_sell_stock[2].parse().unwrap();
+                match quantity {
+                    x if x > 0 => found_product.stock_product(quantity),
+                    x if x < 0 => found_product.sell_product(quantity),
+                    _ => found_product.gift_product(),
+                }
+            }
+            else {
+                println!("found product check invalid");
+            }
+        }
+        else {
+            println!("found_sell_stock check invalid");
+        }
     }
 
 }
