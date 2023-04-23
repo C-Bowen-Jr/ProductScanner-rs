@@ -102,7 +102,9 @@ impl InventoryApp {
         let re = Regex::new(STOCKSELL_REGEX).unwrap();
         if re.is_match(code.as_str()) {
             let caps = re.captures(code.as_str()).unwrap();
-            return caps;
+            if self.valid_sku(caps.get(1).unwrap().as_str().to_string()){
+                return Some(vec![caps.get(1).unwrap().as_str().to_string(), caps.get(2).unwrap().as_str().to_string()]);
+            }
         }
         None
     }
@@ -120,6 +122,11 @@ impl InventoryApp {
             }
         }
     }*/
+    pub fn valid_sku(&self, check_sku: String) -> bool{
+        if let Some(found) = self.product_list.get(check_sku) {
+
+        }
+    }
     pub fn valid_action_code(&self, code: String) -> bool {
         let re = Regex::new(STOCKSELL_REGEX).unwrap();
         //self.regex_quantity_result(code.clone());
