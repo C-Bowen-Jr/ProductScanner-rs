@@ -130,8 +130,9 @@ fn main() {
         }
 
         if let Some(found_sell_stock) = product_scanner.result_stock_or_sell(choice.clone()) {
-            if let Some(found_product) = product_scanner.product_by_sku(found_sell_stock[1].as_str()) {
-                let quantity: i32 = found_sell_stock[2].parse().unwrap();
+            println!("{}",found_sell_stock[0].as_str());
+            if let Some(found_product) = product_scanner.product_by_sku(found_sell_stock[0].as_str()) {
+                let quantity: i32 = found_sell_stock[1].parse().unwrap();
                 match quantity {
                     x if x > 0 => found_product.stock_product(quantity),
                     x if x < 0 => found_product.sell_product(quantity),
