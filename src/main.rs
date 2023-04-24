@@ -138,7 +138,7 @@ fn main() {
     println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::blue("[SKU]*#"));
 
     loop {
-        let now = chrono::offset::Local::now().format("%m/%d/%Y");
+        let now = format!("{}", chrono::offset::Local::now().format("%m/%d/%Y"));
         let choice = user_input().trim().replace("\n","");
         if choice == "quit" {
             return ();
