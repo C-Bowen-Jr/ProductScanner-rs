@@ -3,6 +3,7 @@ use std::io::stdin;
 use std::fs;
 use std::thread;
 use std::time::Duration;
+use chrono;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use yansi::{Paint,Color};
@@ -11,6 +12,7 @@ use regex::Regex;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const STOCKSELL_REGEX: &str = r"^\[(.+)\]\*(-?\d+)$";
+const NEWPRODUCT_REGEX: &str = r"^Q\+(\[[\w]+\])\(([\w\s]+)\)(\d)$";
 
 enum TransactionType {
     Sell,
@@ -81,6 +83,17 @@ impl InventoryApp {
         }
         None
     }
+    fn result_new_product(&self, code: String) -> Option<Vec<String>> {
+        let re = Regex::new(NEWPRODUCT_REGEX).unwrap();
+        if re.is_match(code.as_str()) {
+            let caps = re.captures(code.as_str()).unwrap();
+            let cap_sku = caps.get(1).unwrap().as_str().to_string();
+            let cap_title = caps.get(2).unwrap().as_str().to_string();
+            let cap_quantity = caps.get(3).unwrap().as_str().to_string();
+            return Some(vec![cap_sku, cap_title, cap_quantity]);
+        }
+        None
+    }
     fn product_by_sku(&mut self, sku: &str) -> Option<&mut Product> {
         self.product_list.get_mut(sku)
     }
@@ -125,11 +138,13 @@ fn main() {
     println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::blue("[SKU]*#"));
 
     loop {
+        let now = chrono::offset::Local::now().format("%m/%d/%Y");
         let choice = user_input().trim().replace("\n","");
         if choice == "quit" {
             return ();
         }
 
+        // Action code on SELL, STOCK, or GIFT
         if let Some(found_sell_stock) = product_scanner.result_stock_or_sell(choice.clone()) {
             if let Some(found_product) = product_scanner.product_by_sku(found_sell_stock[0].as_str()) {
                 let quantity: i32 = found_sell_stock[1].parse().unwrap();
@@ -142,6 +157,29 @@ fn main() {
             else {
                 println!("'{}' is not a product", Paint::red(found_sell_stock[0].as_str()));
                 email_log.push(format!("'{}' is not a product",found_sell_stock[0].as_str()));
+            }
+        }
+        // Action code on ADD PRODUCT
+        else if let Some(new_product) = product_scanner.result_new_product(choice.clone()) {
+            if let Some(already_exists) = product_scanner.product_by_sku(new_product[0].as_str()) {
+                println!("'{}' already exiists", Paint::red(new_product[0].as_str()));
+                email_log.push(format!("'{}' already exiists", new_product[0].as_str()));
+            }
+            else {
+                let new_sku = new_product[0].clone();
+                let new_name = new_product[1].clone();
+                let new_quantity = new_product[2].clone();
+                let new_release_date = now.clone();
+                let build_product: Product = Product{
+                    name: new_name,
+                    sku: new_sku,
+                    stock: new_quantity.parse().unwrap(),
+                    sold: 0,
+                    released: new_release_date,
+                    retired: false,
+                };
+                product_scanner.product_list.insert(new_product[0].clone(), build_product);
+                println!("{:?}", product_scanner.product_list);
             }
         }
         else {
@@ -170,5 +208,18 @@ mod tests {
     fn test_valid_product() {
         let mut test_app = InventoryApp::new();
         assert_eq!(test_app.product_by_sku("NOSKU").is_some(), true);
+    }
+    #[test]
+    fn test_invalid_new_product() {
+        let mut test_app = InventoryApp::new();
+        assert_eq!(test_app.result_new_product("not valid".to_string()), None);
+    }
+    #[test]
+    fn test_valid_new_product() {
+        let mut test_app = InventoryApp::new();
+        let expected: Vec<String> = vec!["NEW".to_string(),"New product".to_string(),"1".to_string()];
+        if let Some(new_product) = test_app.result_new_product("Q+[NEW](New product)1".to_string()) {
+            assert_eq!(new_product, expected);
+        }
     }
 }
