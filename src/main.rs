@@ -119,6 +119,7 @@ fn main() {
     });
 
     let mut product_scanner = InventoryApp::new();
+    let mut email_log: Vec<String> = vec![];
     println!("\n---{}--- {}{}", Paint::green("Inventory Server Product Scanner"), Paint::yellow("V."), Paint::yellow(VERSION));
     println!("Scan '{}' to add a new product.", Paint::blue("Q+[SKU](Product Name)#"));
     println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::blue("[SKU]*#"));
@@ -130,7 +131,6 @@ fn main() {
         }
 
         if let Some(found_sell_stock) = product_scanner.result_stock_or_sell(choice.clone()) {
-            println!("{}",found_sell_stock[0].as_str());
             if let Some(found_product) = product_scanner.product_by_sku(found_sell_stock[0].as_str()) {
                 let quantity: i32 = found_sell_stock[1].parse().unwrap();
                 match quantity {
@@ -140,11 +140,13 @@ fn main() {
                 }
             }
             else {
-                println!("found product check invalid");
+                println!("'{}' is not a product", Paint::red(found_sell_stock[0].as_str()));
+                email_log.push(format!("'{}' is not a product",found_sell_stock[0].as_str()));
             }
         }
         else {
-            println!("found_sell_stock check invalid");
+            println!("'{}' is not an action", Paint::red(choice.clone()));
+            email_log.push(format!("'{}' is not an action",choice.clone()));
         }
     }
 
