@@ -161,4 +161,14 @@ mod tests {
         let test_app = InventoryApp::new();
         assert_eq!(test_app.result_stock_or_sell("something".to_string()), None);
     }
+    #[test]
+    fn test_invalid_product() {
+        let mut test_app = InventoryApp::new();
+        assert_eq!(test_app.product_by_sku("NOT_REAL"), None);
+    }
+    #[test]
+    fn test_valid_product() {
+        let mut test_app = InventoryApp::new();
+        assert_eq!(test_app.product_by_sku("REMOVE_ME").is_some(), true);
+    }
 }
