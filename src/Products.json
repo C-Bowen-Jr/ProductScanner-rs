@@ -1,7 +1,7 @@
 [
   {
-    "name": "Test Product",
-    "sku": "REMOVE_ME",
+    "name": "Default product",
+    "sku": "NOSKU",
     "stock": 0,
     "sold": 0,
     "released": "01/01/1900",

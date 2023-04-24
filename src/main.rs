@@ -169,6 +169,6 @@ mod tests {
     #[test]
     fn test_valid_product() {
         let mut test_app = InventoryApp::new();
-        assert_eq!(test_app.product_by_sku("REMOVE_ME").is_some(), true);
+        assert_eq!(test_app.product_by_sku("NOSKU").is_some(), true);
     }
 }
