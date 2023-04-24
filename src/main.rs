@@ -151,3 +151,14 @@ fn main() {
     }
 
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_invalid_action() {
+        let test_app = InventoryApp::new();
+        assert_eq!(test_app.result_stock_or_sell("something".to_string()), None);
+    }
+}
