@@ -1,6 +1,7 @@
 #![allow(unused_imports, dead_code)]
 use std::io::stdin;
 use std::fs;
+use std::fs::File;
 use std::thread;
 use std::time::Duration;
 use chrono;
@@ -20,7 +21,7 @@ enum TransactionType {
     Gift,
 }
 
-#[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct Product {
     name: String,
     sku: String,
@@ -119,8 +120,15 @@ fn json_object(json_string: String) -> HashMap<String, Product> {
     for each_product in product_vector {
         prehash_map.push((each_product.sku.clone(),each_product));
     }
-    println!("load from json: {:?}", prehash_map);
     prehash_map.into_iter().collect()
+}
+
+fn save_to_json(product_hashmap: &HashMap<String, Product>) {
+    let extracted_products: Vec<&Product> = product_hashmap.values().collect();
+    //let file = File::open("./src/Products.json".to_owned()).unwrap();
+    //let data = serde_json::to_string(&extracted_products).unwrap();
+    //file.write(data.as_bytes());
+    fs::write("./src/Products.json", serde_json::to_string_pretty(&extracted_products).unwrap());
 }
 
 fn main() {
@@ -153,6 +161,7 @@ fn main() {
                     x if x < 0 => found_product.sell_product(quantity),
                     _ => found_product.gift_product(),
                 }
+                save_to_json(&product_scanner.product_list);
             }
             else {
                 println!("'{}' is not a product", Paint::red(found_sell_stock[0].as_str()));
@@ -179,7 +188,7 @@ fn main() {
                     retired: false,
                 };
                 product_scanner.product_list.insert(new_product[0].clone(), build_product);
-                println!("{:?}", product_scanner.product_list);
+                save_to_json(&product_scanner.product_list);
             }
         }
         else {
