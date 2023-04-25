@@ -13,7 +13,7 @@ use regex::Regex;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const STOCKSELL_REGEX: &str = r"^\[(.+)\]\*(-?\d+)$";
-const NEWPRODUCT_REGEX: &str = r"^Q\+(\[[\w]+\])\(([\w\s]+)\)(\d)$";
+const NEWPRODUCT_REGEX: &str = r"^Q\+\[([\w]+)\]\(([\w\s]+)\)(\d)$";
 
 enum TransactionType {
     Sell,
