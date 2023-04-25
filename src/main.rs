@@ -12,8 +12,10 @@ use regex::Regex;
 //use serde_json::{Key, Value};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-const STOCKSELL_REGEX: &str = r"^\[(.+)\]\*(-?\d+)$";
+const STOCKSELL_REGEX: &str = r"^\[(\w+)\]\*(-?\d+)$";
 const NEWPRODUCT_REGEX: &str = r"^Q\+\[([\w]+)\]\(([\w\s]+)\)(\d)$";
+const INSPECT_REGEX: &str = r"^inspect:(\w+)$";
+const RETIRE_REGEX: &str = r"^(retire|restore):(\w+)$";
 
 enum TransactionType {
     Sell,
@@ -80,7 +82,9 @@ impl InventoryApp {
         let re = Regex::new(STOCKSELL_REGEX).unwrap();
         if re.is_match(code.as_str()) {
             let caps = re.captures(code.as_str()).unwrap();
-            return Some(vec![caps.get(1).unwrap().as_str().to_string(), caps.get(2).unwrap().as_str().to_string()]);
+            let cap_sku = caps.get(1).unwrap().as_str().to_string();
+            let cap_quantity = caps.get(2).unwrap().as_str().to_string();
+            return Some(vec![cap_sku, cap_quantity]);
         }
         None
     }
@@ -92,6 +96,26 @@ impl InventoryApp {
             let cap_title = caps.get(2).unwrap().as_str().to_string();
             let cap_quantity = caps.get(3).unwrap().as_str().to_string();
             return Some(vec![cap_sku, cap_title, cap_quantity]);
+        }
+        None
+    }
+    fn result_inspect(&self, code: String) -> Option<String> {
+        let re = Regex::new(INSPECT_REGEX).unwrap();
+        if re.is_match(code.as_str()) {
+            let caps = re.captures(code.as_str()).unwrap();
+            let cap_sku = caps.get(1).unwrap().as_str().to_string();
+            return Some(cap_sku);
+        }
+        None
+    }
+    fn result_retire(&self, code: String) -> Option<Vec<String>> {
+        let re = Regex::new(RETIRE_REGEX).unwrap();
+        if re.is_match(code.as_str()) {
+            let caps = re.captures(code.as_str()).unwrap();
+            let cap_sku = caps.get(2).unwrap().as_str().to_string();
+            let cap_retire = caps.get(1).unwrap().as_str().to_string();
+            // Keep sku consistently as the first element in the result_inspect
+            return Some(vec![cap_sku, cap_retire]);
         }
         None
     }
@@ -170,7 +194,7 @@ fn main() {
         }
         // Action code on ADD PRODUCT
         else if let Some(new_product) = product_scanner.result_new_product(choice.clone()) {
-            if let Some(already_exists) = product_scanner.product_by_sku(new_product[0].as_str()) {
+            if let Some(_already_exists) = product_scanner.product_by_sku(new_product[0].as_str()) {
                 println!("'{}' already exiists", Paint::red(new_product[0].as_str()));
                 email_log.push(format!("'{}' already exiists", new_product[0].as_str()));
             }
@@ -189,6 +213,33 @@ fn main() {
                 };
                 product_scanner.product_list.insert(new_product[0].clone(), build_product);
                 save_to_json(&product_scanner.product_list);
+            }
+        }
+        // Action code on INSPECT
+        else if let Some(inspect_product) = product_scanner.result_inspect(choice.clone()) {
+            if let Some(found_product) = product_scanner.product_by_sku(inspect_product.as_str()) {
+                found_product.print_product(TransactionType::Gift);
+            }
+            else {
+                println!("{} is not a product", Paint::red(inspect_product.as_str()));
+            }
+        }
+        // Action code on RETIRE/RESTORE
+        else if let Some(retire_product) = product_scanner.result_retire(choice.clone()) {
+            if let Some(found_product) = product_scanner.product_by_sku(retire_product[0].as_str()) {
+                let currently_retired: bool = found_product.retired;
+                match (retire_product[1].as_str(), currently_retired) {
+                    ("retire", true) => println!("{} is already retired", Paint::red(retire_product[0].as_str())),
+                    ("retire", false) => found_product.retired = true,
+                    ("restore", false) => println!("{} is already active", Paint::red(retire_product[0].as_str())),
+                    ("restore", true) => found_product.retired = false,
+                    _ => println!("Something went wrong in retire/stock \n{:?}", retire_product),
+                }
+                save_to_json(&product_scanner.product_list);
+            }
+            else {
+                println!("'{}' is not a product", Paint::red(retire_product[0].as_str()));
+                email_log.push(format!("'{}' is not a product",retire_product[0].as_str()));
             }
         }
         else {
@@ -220,7 +271,7 @@ mod tests {
     }
     #[test]
     fn test_invalid_new_product() {
-        let mut test_app = InventoryApp::new();
+        let test_app = InventoryApp::new();
         assert_eq!(test_app.result_new_product("not valid".to_string()), None);
     }
     #[test]
@@ -230,5 +281,15 @@ mod tests {
         if let Some(new_product) = test_app.result_new_product("Q+[NEW](New product)1".to_string()) {
             assert_eq!(new_product, expected);
         }
+    }
+    #[test]
+    fn test_invalid_inspect() {
+        let test_app = InventoryApp::new();
+        assert_eq!(test_app.result_inspect("inspect:cant be sku".to_string()),None);
+    }
+    #[test]
+    fn test_valid_inspect() {
+        let test_app = InventoryApp::new();
+        assert_eq!(test_app.result_inspect("inspect:NOSKU".to_string()).is_some(),true);
     }
 }
