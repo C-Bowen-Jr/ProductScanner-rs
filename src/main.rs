@@ -16,6 +16,10 @@ const STOCKSELL_REGEX: &str = r"^\[(\w+)\]\*(-?\d+)$";
 const NEWPRODUCT_REGEX: &str = r"^Q\+\[([\w]+)\]\(([\w\s]+)\)(\d)$";
 const INSPECT_REGEX: &str = r"^inspect:(\w+)$";
 const RETIRE_REGEX: &str = r"^(retire|restore):(\w+)$";
+#[cfg(debug_assertions)]
+const SAVEFILE: &str = "./src/Products.json";
+#[cfg(not(debug_assertions))]
+const SAVEFILE: &str = "./Products.json";
 
 enum TransactionType {
     Sell,
@@ -75,7 +79,7 @@ struct InventoryApp {
 impl InventoryApp {
     fn new() -> Self {
          Self {
-            product_list: json_object("./src/Products.json".to_owned()),
+            product_list: json_object(SAVEFILE.to_owned()),
         }
     }
     fn result_stock_or_sell(&self, code: String) -> Option<Vec<String>> {
@@ -149,10 +153,7 @@ fn json_object(json_string: String) -> HashMap<String, Product> {
 
 fn save_to_json(product_hashmap: &HashMap<String, Product>) {
     let extracted_products: Vec<&Product> = product_hashmap.values().collect();
-    //let file = File::open("./src/Products.json".to_owned()).unwrap();
-    //let data = serde_json::to_string(&extracted_products).unwrap();
-    //file.write(data.as_bytes());
-    fs::write("./src/Products.json", serde_json::to_string_pretty(&extracted_products).unwrap());
+    fs::write(SAVEFILE, serde_json::to_string_pretty(&extracted_products).unwrap());
 }
 
 fn main() {
@@ -165,6 +166,8 @@ fn main() {
 
     let mut product_scanner = InventoryApp::new();
     let mut email_log: Vec<String> = vec![];
+    Paint::enable_windows_ascii();
+
     println!("\n---{}--- {}{}", Paint::green("Inventory Server Product Scanner"), Paint::yellow("V."), Paint::yellow(VERSION));
     println!("Scan '{}' to add a new product.", Paint::blue("Q+[SKU](Product Name)#"));
     println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::blue("[SKU]*#"));
