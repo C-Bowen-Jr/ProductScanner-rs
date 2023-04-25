@@ -2,7 +2,7 @@
   {
     "name": "Default product",
     "sku": "NOSKU",
-    "stock": 0,
+    "stock": 2,
     "sold": 0,
     "released": "01/01/1900",
     "retired": false
