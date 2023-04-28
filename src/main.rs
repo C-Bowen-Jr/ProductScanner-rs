@@ -12,7 +12,7 @@ use regex::Regex;
 //use serde_json::{Key, Value};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-const STOCKSELL_REGEX: &str = r"^\[(\w+)\]\*(-?\d+)$";
+const STOCKSELL_REGEX: &str = r"^(\w+)\*(-?\d+)$";
 const NEWPRODUCT_REGEX: &str = r"^Q\+\[([\w]+)\]\(([\w\s]+)\)(\d)$";
 const INSPECT_REGEX: &str = r"^inspect:(\w+)$";
 const RETIRE_REGEX: &str = r"^(retire|restore):(\w+)$";
@@ -170,7 +170,7 @@ fn main() {
 
     println!("\n---{}--- {}{}", Paint::green("Inventory Server Product Scanner"), Paint::yellow("V."), Paint::yellow(VERSION));
     println!("Scan '{}' to add a new product.", Paint::blue("Q+[SKU](Product Name)#"));
-    println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::blue("[SKU]*#"));
+    println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::blue("SKU*#"));
 
     loop {
         let now = format!("{}", chrono::offset::Local::now().format("%m/%d/%Y"));
