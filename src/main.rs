@@ -1,15 +1,16 @@
 #![allow(unused_imports, dead_code)]
 use std::io::stdin;
+use std::io::Write;
 use std::fs;
 use std::fs::File;
 use std::thread;
 use std::time::Duration;
-use chrono;
 use std::collections::HashMap;
+use chrono;
 use serde::{Serialize, Deserialize};
 use yansi::{Paint,Color};
 use regex::Regex;
-//use serde_json::{Key, Value};
+use askama::Template;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const STOCKSELL_REGEX: &str = r"^(\w+)\*(-?\d+)$";
@@ -20,6 +21,17 @@ const RETIRE_REGEX: &str = r"^(retire|restore):(\w+)$";
 const SAVEFILE: &str = "./src/Products.json";
 #[cfg(not(debug_assertions))]
 const SAVEFILE: &str = "./Products.json";
+
+#[derive(Template)]
+#[template(path = "report_template.html")]
+
+struct ServerTemplate<'a> {
+    weekly_sold: &'a str,
+    weekly_produced: &'a str,
+    total_sold: &'a str,
+    total_produced: &'a str,
+    currently_stocked: &'a i32,
+}
 
 enum TransactionType {
     Sell,
@@ -126,6 +138,26 @@ impl InventoryApp {
     fn product_by_sku(&mut self, sku: &str) -> Option<&mut Product> {
         self.product_list.get_mut(sku)
     }
+    fn build_server_email(&self) {
+        // Calculate values
+        let mut give_currently_stocked = 0;
+        self.product_list.values().for_each(|v| give_currently_stocked += v.stock);
+
+        // Build
+        let email_gen = ServerTemplate {
+            weekly_sold: "W SOLD",
+            weekly_produced: "W PROD",
+            total_sold: "T SOLD",
+            total_produced: "T PROD",
+            currently_stocked: &give_currently_stocked,
+
+        };
+        // Output is either debug to output.html or release to str?String?
+        //println!("{}", email_gen.render().unwrap());
+        let mut file = File::create("./output.html").unwrap();
+        let file_ref = file.by_ref();
+        email_gen.write_into(file_ref).unwrap();
+    }
 }
 
 fn user_input() -> String {
@@ -172,6 +204,7 @@ fn main() {
     println!("Scan '{}' to add a new product.", Paint::blue("Q+[SKU](Product Name)#"));
     println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::blue("SKU*#"));
 
+    product_scanner.build_server_email();
     loop {
         let now = format!("{}", chrono::offset::Local::now().format("%m/%d/%Y"));
         let choice = user_input().trim().replace("\n","");
