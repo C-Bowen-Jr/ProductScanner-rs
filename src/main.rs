@@ -26,11 +26,11 @@ const SAVEFILE: &str = "./Products.json";
 #[template(path = "report_template.html")]
 
 struct ServerTemplate<'a> {
-    weekly_sold: &'a str,
-    weekly_produced: &'a str,
-    total_sold: &'a str,
-    total_produced: &'a str,
-    currently_stocked: &'a i32,
+    report_weekly_sold: &'a i32,
+    report_weekly_produced: &'a i32,
+    report_total_sold: &'a i32,
+    report_total_produced: &'a i32,
+    report_currently_stocked: &'a i32,
 }
 
 enum TransactionType {
@@ -86,12 +86,16 @@ impl Product {
 #[derive(Debug)]
 struct InventoryApp {
     product_list: HashMap<String,Product>,
+    weekly_produced: i32,
+    weekly_sold: i32,
 }
 
 impl InventoryApp {
     fn new() -> Self {
          Self {
             product_list: json_object(SAVEFILE.to_owned()),
+            weekly_produced: 0,
+            weekly_sold: 0,
         }
     }
     fn result_stock_or_sell(&self, code: String) -> Option<Vec<String>> {
@@ -140,16 +144,15 @@ impl InventoryApp {
     }
     fn build_server_email(&self) {
         // Calculate values
-        let mut give_currently_stocked = 0;
-        self.product_list.values().for_each(|v| give_currently_stocked += v.stock);
+
 
         // Build
         let email_gen = ServerTemplate {
-            weekly_sold: "W SOLD",
-            weekly_produced: "W PROD",
-            total_sold: "T SOLD",
-            total_produced: "T PROD",
-            currently_stocked: &give_currently_stocked,
+            report_weekly_sold: &self.weekly_sold,
+            report_weekly_produced: &self.weekly_produced,
+            report_total_sold: &self.total_sold(),
+            report_total_produced: &self.total_produced(),
+            report_currently_stocked: &self.currently_stocked(),
 
         };
         // Output is either debug to output.html or release to str?String?
@@ -157,6 +160,21 @@ impl InventoryApp {
         let mut file = File::create("./output.html").unwrap();
         let file_ref = file.by_ref();
         email_gen.write_into(file_ref).unwrap();
+    }
+    fn total_sold(&self) -> i32 {
+        let mut sum_of_sold = 0;
+        self.product_list.values().for_each(|v| sum_of_sold += v.sold);
+        sum_of_sold
+    }
+    fn total_produced(&self) -> i32 {
+        let mut sum_of_produced = 0;
+        self.product_list.values().for_each(|v| sum_of_produced += v.sold + v.stock);
+        sum_of_produced
+    }
+    fn currently_stocked(&self) -> i32 {
+        let mut sum_of_stocked = 0;
+        self.product_list.values().for_each(|v| sum_of_stocked += v.stock);
+        sum_of_stocked
     }
 }
 
@@ -204,12 +222,15 @@ fn main() {
     println!("Scan '{}' to add a new product.", Paint::blue("Q+[SKU](Product Name)#"));
     println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::blue("SKU*#"));
 
-    product_scanner.build_server_email();
     loop {
         let now = format!("{}", chrono::offset::Local::now().format("%m/%d/%Y"));
         let choice = user_input().trim().replace("\n","");
         if choice == "quit" {
             return ();
+        }
+        if choice == "email" {
+            println!("Generating email");
+            product_scanner.build_server_email();
         }
 
         // Action code on SELL, STOCK, or GIFT
@@ -217,8 +238,8 @@ fn main() {
             if let Some(found_product) = product_scanner.product_by_sku(found_sell_stock[0].as_str()) {
                 let quantity: i32 = found_sell_stock[1].parse().unwrap();
                 match quantity {
-                    x if x > 0 => found_product.stock_product(quantity),
-                    x if x < 0 => found_product.sell_product(quantity),
+                    x if x > 0 => {found_product.stock_product(quantity); product_scanner.weekly_produced += quantity;},
+                    x if x < 0 => {found_product.sell_product(quantity); product_scanner.weekly_sold -= quantity;},
                     _ => found_product.gift_product(),
                 }
                 save_to_json(&product_scanner.product_list);
@@ -247,6 +268,7 @@ fn main() {
                     released: new_release_date,
                     retired: false,
                 };
+                product_scanner.weekly_produced += &build_product.stock;
                 product_scanner.product_list.insert(new_product[0].clone(), build_product);
                 save_to_json(&product_scanner.product_list);
             }
