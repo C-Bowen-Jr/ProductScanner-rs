@@ -86,7 +86,6 @@ impl Product {
 #[derive(Debug)]
 struct InventoryApp {
     product_list: HashMap<String,Product>,
-    email_log: Vec<String>,
     weekly_produced: i32,
     weekly_sold: i32,
 }
@@ -95,7 +94,6 @@ impl InventoryApp {
     fn new() -> Self {
          Self {
             product_list: json_object(SAVEFILE.to_owned()),
-            email_log: vec![],
             weekly_produced: 0,
             weekly_sold: 0,
         }
@@ -178,14 +176,6 @@ impl InventoryApp {
         self.product_list.values().for_each(|v| sum_of_stocked += v.stock);
         sum_of_stocked
     }
-    fn report_transaction(&mut self, prod_name: String, quantity: i32, was: TransactionType)
-    {
-        match was {
-            TransactionType::Sell => {self.email_log.push(format!("Sold {} of {}", quantity, prod_name)); self.weekly_sold -= quantity;},
-            TransactionType::Stock => {self.email_log.push(format!("Stocked {} of {}", quantity, prod_name)); self.weekly_produced += quantity;},
-            TransactionType::Gift => self.email_log.push(format!("Gave away {} of {}", quantity, prod_name)),
-        }
-    }
 }
 
 fn user_input() -> String {
@@ -225,6 +215,7 @@ fn main() {
     });
 
     let mut product_scanner = InventoryApp::new();
+    let mut email_log: Vec<String> = vec![];
     Paint::enable_windows_ascii();
 
     println!("\n---{}--- {}{}", Paint::green("Inventory Server Product Scanner"), Paint::yellow("V."), Paint::yellow(VERSION));
@@ -247,22 +238,22 @@ fn main() {
             if let Some(found_product) = product_scanner.product_by_sku(found_sell_stock[0].as_str()) {
                 let quantity: i32 = found_sell_stock[1].parse().unwrap();
                 match quantity {
-                    x if x > 0 => {found_product.stock_product(quantity); product_scanner.report_transaction(found_product.name, quantity, TransactionType::Stock);},
-                    x if x < 0 => {found_product.sell_product(quantity); product_scanner.report_transaction(found_product.name, quantity, TransactionType::Sell);},
-                    _ => {found_product.gift_product(); product_scanner.report_transaction(found_product.name, 1 as i32, TransactionType::Gift)},
+                    x if x > 0 => {found_product.stock_product(quantity); product_scanner.weekly_produced += quantity;},
+                    x if x < 0 => {found_product.sell_product(quantity); product_scanner.weekly_sold -= quantity;},
+                    _ => found_product.gift_product(),
                 }
                 save_to_json(&product_scanner.product_list);
             }
             else {
                 println!("'{}' is not a product", Paint::red(found_sell_stock[0].as_str()));
-                product_scanner.email_log.push(format!("'{}' is not a product",found_sell_stock[0].as_str()));
+                email_log.push(format!("'{}' is not a product",found_sell_stock[0].as_str()));
             }
         }
         // Action code on ADD PRODUCT
         else if let Some(new_product) = product_scanner.result_new_product(choice.clone()) {
             if let Some(_already_exists) = product_scanner.product_by_sku(new_product[0].as_str()) {
                 println!("'{}' already exiists", Paint::red(new_product[0].as_str()));
-                product_scanner.email_log.push(format!("'{}' already exiists", new_product[0].as_str()));
+                email_log.push(format!("'{}' already exiists", new_product[0].as_str()));
             }
             else {
                 let new_sku = new_product[0].clone();
@@ -306,12 +297,12 @@ fn main() {
             }
             else {
                 println!("'{}' is not a product", Paint::red(retire_product[0].as_str()));
-                product_scanner.email_log.push(format!("'{}' is not a product",retire_product[0].as_str()));
+                email_log.push(format!("'{}' is not a product",retire_product[0].as_str()));
             }
         }
         else {
             println!("'{}' is not an action", Paint::red(choice.clone()));
-            product_scanner.email_log.push(format!("'{}' is not an action",choice.clone()));
+            email_log.push(format!("'{}' is not an action",choice.clone()));
         }
     }
 
@@ -358,26 +349,5 @@ mod tests {
     fn test_valid_inspect() {
         let test_app = InventoryApp::new();
         assert_eq!(test_app.result_inspect("inspect:NOSKU".to_string()).is_some(),true);
-    }
-    #[test]
-    fn test_report_transaction_sell() {
-        let mut test_app = InventoryApp::new();
-        test_app.report_transaction("Test product".to_string(), -1 as i32, TransactionType::Sell);
-        assert_eq!(test_app.email_log[0], "Sold 1 of Test product".to_string());
-        assert_eq!(test_app.weekly_sold, 1);
-    }
-    #[test]
-    fn test_report_transaction_stock() {
-        let mut test_app = InventoryApp::new();
-        test_app.report_transaction("Test product".to_string(), 1 as i32, TransactionType::Stock);
-        assert_eq!(test_app.email_log[0], "Stocked 1 of Test product".to_string());
-        assert_eq!(test_app.weekly_produced, 1);
-    }
-    #[test]
-    fn test_report_transaction_gift() {
-        let mut test_app = InventoryApp::new();
-        test_app.report_transaction("Test product".to_string(), 1 as i32, TransactionType::Gift);
-        assert_eq!(test_app.email_log[0], "Gave away 1 of Test product".to_string());
-        assert_eq!(test_app.weekly_sold, 0);
     }
 }
