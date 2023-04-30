@@ -31,6 +31,7 @@ struct ServerTemplate<'a> {
     report_total_sold: &'a i32,
     report_total_produced: &'a i32,
     report_currently_stocked: &'a i32,
+    report_terminal_log: &'a Vec<String>,
 }
 
 enum TransactionType {
@@ -142,7 +143,7 @@ impl InventoryApp {
     fn product_by_sku(&mut self, sku: &str) -> Option<&mut Product> {
         self.product_list.get_mut(sku)
     }
-    fn build_server_email(&self) {
+    fn build_server_email(&self, log: Vec<String>) {
         // Calculate values
 
 
@@ -153,6 +154,7 @@ impl InventoryApp {
             report_total_sold: &self.total_sold(),
             report_total_produced: &self.total_produced(),
             report_currently_stocked: &self.currently_stocked(),
+            report_terminal_log: &log,
 
         };
         // Output is either debug to output.html or release to str?String?
@@ -230,7 +232,7 @@ fn main() {
         }
         if choice == "email" {
             println!("Generating email");
-            product_scanner.build_server_email();
+            product_scanner.build_server_email(email_log.clone());
         }
 
         // Action code on SELL, STOCK, or GIFT
@@ -238,9 +240,20 @@ fn main() {
             if let Some(found_product) = product_scanner.product_by_sku(found_sell_stock[0].as_str()) {
                 let quantity: i32 = found_sell_stock[1].parse().unwrap();
                 match quantity {
-                    x if x > 0 => {found_product.stock_product(quantity); product_scanner.weekly_produced += quantity;},
-                    x if x < 0 => {found_product.sell_product(quantity); product_scanner.weekly_sold -= quantity;},
-                    _ => found_product.gift_product(),
+                    x if x > 0 => {
+                        email_log.push(format!("Stocked {} of {}", found_product.name, quantity));
+                        found_product.stock_product(quantity);
+                        product_scanner.weekly_produced += quantity;
+                    },
+                    x if x < 0 => {
+                        email_log.push(format!("Sold {} of {}", found_product.name, quantity * -1));
+                        found_product.sell_product(quantity);
+                        product_scanner.weekly_sold -= quantity;
+                    },
+                    _ => {
+                        found_product.gift_product();
+                        email_log.push(format!("Gave away 1 of {}", found_product.name));
+                    },
                 }
                 save_to_json(&product_scanner.product_list);
             }

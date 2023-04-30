@@ -212,7 +212,9 @@ li#log_error{
   <h1>Terminal Log</h1>
   <div id="terminal_log">
     <ul>
-      ##TERMINAL##
+      {% for item in report_terminal_log %}
+        <li>{{ item }}</li>
+      {% endfor %}
     </ul>
   </div>
 </body>
