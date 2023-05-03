@@ -32,13 +32,19 @@ struct ServerTemplate<'a> {
     report_total_sold: &'a i32,
     report_total_produced: &'a i32,
     report_currently_stocked: &'a i32,
-    report_terminal_log: &'a Vec<String>,
+    report_terminal_log: &'a Vec<LogType>,
 }
 
 enum TransactionType {
     Sell,
     Stock,
     Gift,
+}
+
+#[derive(Clone)]
+enum LogType {
+    Info(String),
+    Error(String),
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -144,7 +150,7 @@ impl InventoryApp {
     fn product_by_sku(&mut self, sku: &str) -> Option<&mut Product> {
         self.product_list.get_mut(sku)
     }
-    fn build_server_email(&self, log: Vec<String>) {
+    fn build_server_email(&self, log: Vec<LogType>) {
         // Calculate values
         let mut sorted_products: Vec<_> = self.product_list
             .clone()
@@ -224,7 +230,7 @@ fn main() {
     });
 
     let mut product_scanner = InventoryApp::new();
-    let mut email_log: Vec<String> = vec![];
+    let mut email_log: Vec<LogType> = vec![];
     Paint::enable_windows_ascii();
 
     println!("\n---{}--- {}{}", Paint::green("Inventory Server Product Scanner"), Paint::yellow("V."), Paint::yellow(VERSION));
@@ -248,32 +254,32 @@ fn main() {
                 let quantity: i32 = found_sell_stock[1].parse().unwrap();
                 match quantity {
                     x if x > 0 => {
-                        email_log.push(format!("Stocked {} of {}", found_product.name, quantity));
+                        email_log.push(LogType::Info(format!("Stocked {} of {}", found_product.name, quantity)));
                         found_product.stock_product(quantity);
                         product_scanner.weekly_produced += quantity;
                     },
                     x if x < 0 => {
-                        email_log.push(format!("Sold {} of {}", found_product.name, quantity * -1));
+                        email_log.push(LogType::Info(format!("Sold {} of {}", found_product.name, quantity * -1)));
                         found_product.sell_product(quantity);
                         product_scanner.weekly_sold -= quantity;
                     },
                     _ => {
                         found_product.gift_product();
-                        email_log.push(format!("Gave away 1 of {}", found_product.name));
+                        email_log.push(LogType::Info(format!("Gave away 1 of {}", found_product.name)));
                     },
                 }
                 save_to_json(&product_scanner.product_list);
             }
             else {
                 println!("'{}' is not a product", Paint::red(found_sell_stock[0].as_str()));
-                email_log.push(format!("'{}' is not a product",found_sell_stock[0].as_str()));
+                email_log.push(LogType::Error(format!("'{}' is not a product",found_sell_stock[0].as_str())));
             }
         }
         // Action code on ADD PRODUCT
         else if let Some(new_product) = product_scanner.result_new_product(choice.clone()) {
             if let Some(_already_exists) = product_scanner.product_by_sku(new_product[0].as_str()) {
                 println!("'{}' already exiists", Paint::red(new_product[0].as_str()));
-                email_log.push(format!("'{}' already exiists", new_product[0].as_str()));
+                email_log.push(LogType::Error(format!("'{}' already exiists", new_product[0].as_str())));
             }
             else {
                 let new_sku = new_product[0].clone();
@@ -317,12 +323,12 @@ fn main() {
             }
             else {
                 println!("'{}' is not a product", Paint::red(retire_product[0].as_str()));
-                email_log.push(format!("'{}' is not a product",retire_product[0].as_str()));
+                email_log.push(LogType::Error(format!("'{}' is not a product",retire_product[0].as_str())));
             }
         }
         else {
             println!("'{}' is not an action", Paint::red(choice.clone()));
-            email_log.push(format!("'{}' is not an action",choice.clone()));
+            email_log.push(LogType::Error(format!("'{}' is not an action",choice.clone())));
         }
     }
 

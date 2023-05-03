@@ -209,7 +209,12 @@
             <h1>Terminal Log</h1>
             <ul>
                 {% for item in report_terminal_log %}
-                    <li>{{ item }}</li>
+                    {% match item %}
+                        {% when LogType::Info(text) %}
+                            <li>{{ text }}</li>
+                        {% when LogType::Error(text) %}
+                            <li id="terminal_log_alert">{{ text }}</li>
+                        {% endmatch %}
                 {% endfor %}
             </ul>
         </div>
