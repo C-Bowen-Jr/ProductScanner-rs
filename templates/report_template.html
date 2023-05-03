@@ -2,221 +2,218 @@
 <head>
 <style>
 
-div#light_section{
-  background-color: #eeeeee;
-  color: #202020;
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-div#light_section h1{
-  background-color: green;
-  color: white;
-  text-align: center;
-  width: 280px;
-  height: 40px;
-  border-radius: 10px;
-  padding: 3px 15px;
-  margin-left: 15px;
-  margin-top: 35px;
-}
-
-div#dark_section{
-  background-color: #202020;
-  color: #eeeeee;
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-div#dark_section h1{
-  background-color: green;
-  color: white;
-  text-align: center;
-  width: 280px;
-  height: 40px;
-  border-radius: 10px;
-  padding: 3px 15px;
-  margin-left: 15px;
-  margin-top: 35px;
-}
-
-div#sales_and_stocks{
-  margin: 15px;
-}
-div#sales_and_stocks table{
-  border-collapse: collapse;
-  width: 50%;
-  margin-bottom: 20px;
-}
-div#sales_and_stocks caption{
-  background-color: green;
-  color: white;
-  border-radius: 10px 10px 0px 0px;
-  width: 80px;
-  padding: 4px;
-  margin: auto;
-}
-div#sales_and_stocks th{
-  background-color: green;
-  color: white;
-  text-align: left;
-  padding: 8px;
-}
-th#product80{
-  border-radius: 10px 0px 0px 0px;
-  width: 80%;
-}
-th#quantity20{
-  border-radius: 0px 10px 0px 0px;
-  width: 20%
-}
-div#sales_and_stocks td{
-  text-alight: left;
-  padding: 8px;
-}
-div#sales_and_stocks tr{
-  border-bottom: 1px solid black;
-}
-tr#stock{
-  background-color: #85d585;
-  color: black;
-}
-tr#sale{
-  background-color: #d58585;
-  color: black;
-}
-tr#ok_stock{
-  background-color: #eeeeee;
-  color: black;
-}
-tr#low_stock{
-  background-color: #d58585;
-  color: black;
-}
-
-div#current_inventory{
-  margin: 15px;
-}
-div#current_inventory table{
-  border-collapse: collapse;
-  width: 80%;
-}
-div#current_inventory th{
-  background: green;
-  color: white;
-  text-align: left;
-  padding: 8px;
-}
-div#current_inventory td{
-  text-alight: left;
-  padding: 8px;
-}
-div#current_inventory tr{
-  border-bottom: 1px solid black;
-}
-div#current_inventory tr:nth-child(odd){
-  background-color: #aaaaaa;
-}
-div#current_inventory tr.low{
-  background-color: #d58585;
-}
-
-div#stats{
-  margin: 15px;
-}
-div#stats table{
-  border-collapse: collapse;
-  width: 50%;
-}
-div#stats th{
-  background-color: green;
-  color: white;
-  text-align: left;
-  padding: 8px;
-}
-div#stats td{
-  text-alight: left;
-  padding: 8px;
-}
-div#stats tr{
-  background-color: #eeeeee;
-  border-bottom: 1px solid black;
-}
-div#stats tr:nth-child(odd){
-  background-color: #aaaaaa;
-}
-
-div#terminal_log{
-  margin: 15px;
-  width: 80%;
-}
-div#terminal_log ul{
-  background-color: #303030;
-  color: white;
-  margin-right: 15px;
-  padding: 30px 0px 30px 30px;
-  border-radius: 5px 5px 5px 5px;
-}
-li#log_error{
-  color: red;
-}
+.body {
+        background-color: white;
+        padding: 10px 0 30px 0;
+    }
+    .body h1 {
+        background-color: green;
+        color: white;
+        border-radius: 10px;
+        padding: 3px 15px;
+        width: fit-content;
+    }
+    .edge-strip {
+        background-color: white;
+        padding: 10px 20px 10px 20px;
+    }
+    .color-strip {
+        background-color: #202020;
+        padding: 10px 20px 10px 20px;
+    }
+    .sales-stocks-table {
+        border-collapse: collapse;
+        margin: 20px 0;
+        min-width: 400px;
+        border-radius: 10px 10px 0 0;
+        overflow: hidden;
+    }
+    .sales-stocks-table caption{
+        background-color: green;
+        color: white;
+        text-align: center;
+        font-weight: bold;
+        width: fit-content;
+        padding: 10px 30px 0 10px;
+        border-radius: 10px 90px 0 0;
+    }
+    .sales-stocks-table thead tr {
+        background-color: green;
+        color: white;
+        text-align: left;
+        font-weight: bold;
+    }
+    .sales-stocks-table thead th.radius-fix {
+        border-radius: 0 16px 0 0;
+    }
+    .sales-stocks-table th,
+    .sales-stocks-table td {
+        padding: 10px 10px;
+    }
+    .sales-stocks-table tbody tr.stocked {
+        background-color: #99fe99;
+        border-bottom: 1px solid #202020;
+    }
+    .sales-stocks-table tbody tr.sold {
+        background-color: #fe9999;
+        border-bottom: 1px solid #202020;
+    }
+    .sales-stocks-table tbody tr:last-of-type {
+        border-bottom: 2px solid green;
+    }
+    .current-stock-table {
+        border-collapse: collapse;
+        margin: 20px 0;
+        min-width: 400px;
+        border-radius: 10px 10px 0 0;
+        overflow: hidden;
+    }
+    .current-stock-table thead tr {
+        background-color: green;
+        color: white;
+        text-align: left;
+        font-weight: bold;
+    }
+    .current-stock-table th,
+    .current-stock-table td {
+        padding: 10px 10px;
+    }
+    .current-stock-table tbody tr {
+        background-color: white;
+        border-bottom: 1px solid #202020;
+    }
+    .current-stock-table tbody tr:nth-of-type(even) {
+        background-color: #c6c6c6;
+    }
+    .current-stock-table tbody tr.low_stock {
+        background-color: #fe9999;
+    }
+    .current-stock-table tbody tr.low_stock:nth-of-type(even) {
+        background-color: #d58585;
+    }
+    .current-stock-table tbody tr:last-of-type {
+        border-bottom: 2px solid green;
+    }
+    .stats-table {
+        border-collapse: collapse;
+        margin: 20px 0px;
+        min-width: 400px;
+        border-radius: 10px 10px 0 0;
+        overflow: hidden;
+    }
+    .stats-table thead tr {
+        background-color: green;
+        color: white;
+        text-align: left;
+        font-weight: bold;
+    }
+    .stats-table th,
+    .stats-table td {
+        padding: 10px 10px;
+    }
+    .stats-table tbody tr {
+        background-color: white;
+        border-bottom: 1px solid #262626;
+    }
+    .stats-table tbody tr:nth-of-type(even) {
+        background-color: #c6c6c6;
+    }
+    .stats-table tbody tr:last-of-type {
+        border-bottom: 2px solid green;
+    }
+    .terminal_log ul{
+        background-color: #303030;
+        color: white;
+        margin-right: 15px;
+        padding: 30px 0px 30px 30px;
+        border-radius: 5px 5px 5px 5px;
+        list-style: none;
+    }
+    .terminal_log li:before {
+        content: ">";
+        padding-right: 8px;
+    }
+    .terminal_log li:not(:last-child) {
+        margin-bottom: 3px;
+    }
+    .terminal_log li#terminal_log_alert{
+        color: red;
+        font-weight: bold;
+    }
 </style>
 </head>
 
-<body>
-<div id="light_section">
-    <h1>Sales and Stocks</h1>
-    <div id="sales_and_stocks">
-      ##SALES_STOCKS##
+<body class="body">
+    <div class="edge-strip">
+        <h1>Sales and Stocks</h1>
+        todo, build table logic here
     </div>
-  </div>
-  <div id="dark_section">
-    <h1>Current Inventory</h1>
-    <div id="current_inventory">
-      <table>
-        <tr>
-          <th style="border-radius: 10px 0px 0px 0px;width:25%;">SKU</th>
-          <th style="border-radius:  0px 0px 0px 0px;width:60%;">Product</th>
-          <th style="border-radius: 0px 10px 0px 0px;width:15%;">Quantity</th>
-        </tr>
-        ##INVENTORY##
-      </table>
+    <div class="color-strip">
+        <h1>Current Inventory</h1>
+        <table class="current-stock-table">
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in report_product_list %}
+                {% if product.stock > 2 %}
+                    <tr>
+                {% else %}
+                    <tr class="low_stock">
+                {% endif %}
+                        <td>{{ product.sku }}</td>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.stock }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <h1>Stats</h1>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Statistic</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Weekly Sold</td>
+                    <td>{{ report_weekly_sold }}</td>
+                </tr>
+                <tr>
+                    <td>Weekly Produced</td>
+                    <td>{{ report_weekly_sold }}</td>
+                </tr>
+                <tr>
+                    <td>Total Sold</td>
+                    <td>{{ report_total_sold }}</td>
+                </tr>
+                <tr>
+                    <td>Total Produced</td>
+                    <td>{{ report_total_produced }}</td>
+                </tr>
+                <tr>
+                    <td>Currently Stocked</td>
+                    <td>{{ report_currently_stocked }}</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-    <h1>Stats</h1>
-    <div id="stats">
-      <table>
-        <tr>
-          <th id="product80">Statistic</th>
-          <th id="quantity20">Quantity</th>
-        </tr>
-        <tr>
-          <td>Weekly Sold</td>
-          <td>{{ report_weekly_sold }}</td>
-        <tr>
-          <td>Weekly Produced</td>
-          <td>{{ report_weekly_produced }}</td>
-        </tr>
-        <tr>
-          <td>Total Sold</td>
-          <td>{{ report_total_sold }}</td>
-        <tr>
-          <td>Total Produced</td>
-          <td>{{ report_total_produced }}</td>
-        </tr>
-        <tr>
-          <td>Currently Stocked</td>
-          <td>{{ report_currently_stocked }}</td>
-        </tr>
-      </table>
+    <div class="edge-strip">
+        <div class="terminal_log">
+            <h1>Terminal Log</h1>
+            <ul>
+                {% for item in report_terminal_log %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
-  </div>
-  <div id="light_section">
-  <h1>Terminal Log</h1>
-  <div id="terminal_log">
-    <ul>
-      {% for item in report_terminal_log %}
-        <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  </div>
 </body>
 </html>
 

@@ -26,6 +26,7 @@ const SAVEFILE: &str = "./Products.json";
 #[template(path = "report_template.html")]
 
 struct ServerTemplate<'a> {
+    report_product_list: &'a Vec<Product>,
     report_weekly_sold: &'a i32,
     report_weekly_produced: &'a i32,
     report_total_sold: &'a i32,
@@ -86,7 +87,7 @@ impl Product {
 
 #[derive(Debug)]
 struct InventoryApp {
-    product_list: HashMap<String,Product>,
+    product_list: HashMap<String,Product>, // SKU string, Product struct
     weekly_produced: i32,
     weekly_sold: i32,
 }
@@ -145,10 +146,16 @@ impl InventoryApp {
     }
     fn build_server_email(&self, log: Vec<String>) {
         // Calculate values
-
+        let mut sorted_products: Vec<_> = self.product_list
+            .clone()
+            .into_iter()
+            .map(|(_, v)| v)
+            .collect();
+        sorted_products.sort_by(|a,b| a.sku.cmp(&b.sku));
 
         // Build
         let email_gen = ServerTemplate {
+            report_product_list: &sorted_products,
             report_weekly_sold: &self.weekly_sold,
             report_weekly_produced: &self.weekly_produced,
             report_total_sold: &self.total_sold(),
