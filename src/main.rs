@@ -264,32 +264,32 @@ fn main() {
                 let quantity: i32 = found_sell_stock[1].parse().unwrap();
                 match quantity {
                     x if x > 0 => {
-                        email_log.push(LogType::Info(format!("Stocked {} of {}", found_product.name, quantity)));
+                        email_log.push(LogType::Info(format!("[{}] {}", now, choice)));
                         found_product.stock_product(quantity);
                         product_scanner.weekly_produced += quantity;
                     },
                     x if x < 0 => {
-                        email_log.push(LogType::Info(format!("Sold {} of {}", found_product.name, quantity * -1)));
+                        email_log.push(LogType::Info(format!("[{}] {}", now, choice)));
                         found_product.sell_product(quantity);
                         product_scanner.weekly_sold -= quantity;
                     },
                     _ => {
                         found_product.gift_product();
-                        email_log.push(LogType::Info(format!("Gave away 1 of {}", found_product.name)));
+                        email_log.push(LogType::Info(format!("[{}] {}", now, choice)));
                     },
                 }
                 save_to_json(&product_scanner.product_list);
             }
             else {
                 println!("'{}' is not a product", Paint::red(found_sell_stock[0].as_str()));
-                email_log.push(LogType::Error(format!("'{}' is not a product",found_sell_stock[0].as_str())));
+                email_log.push(LogType::Error(format!("[{}] '{}' is not a product", now, found_sell_stock[0].as_str())));
             }
         }
         // Action code on ADD PRODUCT
         else if let Some(new_product) = product_scanner.result_new_product(choice.clone()) {
             if let Some(_already_exists) = product_scanner.product_by_sku(new_product[0].as_str()) {
                 println!("'{}' already exiists", Paint::red(new_product[0].as_str()));
-                email_log.push(LogType::Error(format!("'{}' already exiists", new_product[0].as_str())));
+                email_log.push(LogType::Error(format!("[{}] '{}' already exiists", now, new_product[0].as_str())));
             }
             else {
                 let new_sku = new_product[0].clone();
@@ -333,12 +333,12 @@ fn main() {
             }
             else {
                 println!("'{}' is not a product", Paint::red(retire_product[0].as_str()));
-                email_log.push(LogType::Error(format!("'{}' is not a product",retire_product[0].as_str())));
+                email_log.push(LogType::Error(format!("[{}] '{}' is not a product", now, retire_product[0].as_str())));
             }
         }
         else {
             println!("'{}' is not an action", Paint::red(choice.clone()));
-            email_log.push(LogType::Error(format!("'{}' is not an action",choice.clone())));
+            email_log.push(LogType::Error(format!("[{}] '{}' is not an action", now, choice.clone())));
         }
     }
 
