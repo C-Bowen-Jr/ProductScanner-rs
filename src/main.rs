@@ -1,6 +1,7 @@
 #![allow(unused_imports, dead_code)]
 use std::io::stdin;
 use std::io::Write;
+use std::fmt;
 use std::fs;
 use std::fs::File;
 use std::thread;
@@ -55,6 +56,15 @@ struct Product {
     sold: i32,
     released: String,
     retired: bool,
+}
+
+impl fmt::Display for LogType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            LogType::Info(text) => write!(f, "{}", text),
+            LogType::Error(text) => write!(f, "{}", text),
+        }
+    }
 }
 
 impl Product {
