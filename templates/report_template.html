@@ -21,46 +21,6 @@
         background-color: #202020;
         padding: 10px 20px 10px 20px;
     }
-    .sales-stocks-table {
-        border-collapse: collapse;
-        margin: 20px 0;
-        min-width: 400px;
-        border-radius: 10px 10px 0 0;
-        overflow: hidden;
-    }
-    .sales-stocks-table caption{
-        background-color: green;
-        color: white;
-        text-align: center;
-        font-weight: bold;
-        width: fit-content;
-        padding: 10px 30px 0 10px;
-        border-radius: 10px 90px 0 0;
-    }
-    .sales-stocks-table thead tr {
-        background-color: green;
-        color: white;
-        text-align: left;
-        font-weight: bold;
-    }
-    .sales-stocks-table thead th.radius-fix {
-        border-radius: 0 16px 0 0;
-    }
-    .sales-stocks-table th,
-    .sales-stocks-table td {
-        padding: 10px 10px;
-    }
-    .sales-stocks-table tbody tr.stocked {
-        background-color: #99fe99;
-        border-bottom: 1px solid #202020;
-    }
-    .sales-stocks-table tbody tr.sold {
-        background-color: #fe9999;
-        border-bottom: 1px solid #202020;
-    }
-    .sales-stocks-table tbody tr:last-of-type {
-        border-bottom: 2px solid green;
-    }
     .current-stock-table {
         border-collapse: collapse;
         margin: 20px 0;
@@ -145,10 +105,6 @@
 
 <body class="body">
     <div class="edge-strip">
-        <h1>Sales and Stocks</h1>
-        todo, build table logic here
-    </div>
-    <div class="color-strip">
         <h1>Current Inventory</h1>
         <table class="current-stock-table">
             <thead>
@@ -172,6 +128,8 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+    <div class="color-strip">
         <h1>Stats</h1>
         <table class="stats-table">
             <thead>
