@@ -48,6 +48,27 @@ enum LogType {
     Error(String),
 }
 
+#[derive(PartialEq)]
+enum MenuItems {
+    Report,
+    Email,
+    Help,
+    Invalid,
+    Quit,
+}
+
+impl From<String> for MenuItems {
+    fn from(command: String) -> Self {
+        // We use &str from command
+        match command.to_lowercase().as_str() {
+            "report" => Self::Report,
+            "email" => Self::Email,
+            "help" => Self::Help,
+            "quit" => Self::Quit,
+            _ => Self::Invalid,
+        }
+    }
+}
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct Product {
     name: String,
@@ -160,7 +181,7 @@ impl InventoryApp {
     fn product_by_sku(&mut self, sku: &str) -> Option<&mut Product> {
         self.product_list.get_mut(sku)
     }
-    fn build_server_email(&self, log: Vec<LogType>) {
+    fn build_server_report(&self, log: Vec<LogType>) {
         // Calculate values
         let mut sorted_products: Vec<_> = self.product_list
             .clone()
@@ -170,7 +191,7 @@ impl InventoryApp {
         sorted_products.sort_by(|a,b| a.sku.cmp(&b.sku));
 
         // Build
-        let email_gen = ServerTemplate {
+        let report_gen = ServerTemplate {
             report_product_list: &sorted_products,
             report_weekly_sold: &self.weekly_sold,
             report_weekly_produced: &self.weekly_produced,
@@ -181,10 +202,10 @@ impl InventoryApp {
 
         };
         // Output is either debug to output.html or release to str?String?
-        //println!("{}", email_gen.render().unwrap());
-        let mut file = File::create("./output.html").unwrap();
+        //println!("{}", report_gen.render().unwrap());
+        let mut file = File::create("./report.html").unwrap();
         let file_ref = file.by_ref();
-        email_gen.write_into(file_ref).unwrap();
+        report_gen.write_into(file_ref).unwrap();
     }
     fn total_sold(&self) -> i32 {
         let mut sum_of_sold = 0;
@@ -240,7 +261,7 @@ fn main() {
     });
 
     let mut product_scanner = InventoryApp::new();
-    let mut email_log: Vec<LogType> = vec![];
+    let mut report_log: Vec<LogType> = vec![];
     Paint::enable_windows_ascii();
 
     println!("\n---{}--- {}{}", Paint::green("Inventory Server Product Scanner"), Paint::yellow("V."), Paint::yellow(VERSION));
@@ -250,13 +271,14 @@ fn main() {
     loop {
         let now = format!("{}", chrono::offset::Local::now().format("%m/%d/%Y"));
         let choice = user_input().trim().replace("\n","");
-        if choice == "quit" {
+        let menu_option = MenuItems::from(choice.clone());
+        /*if choice == "quit" {
             return ();
         }
-        if choice == "email" {
-            println!("Generating email");
-            product_scanner.build_server_email(email_log.clone());
-        }
+        if choice == "report" {
+            println!("Generating report");
+            product_scanner.build_server_report(report_log.clone());
+        }*/
 
         // Action code on SELL, STOCK, or GIFT
         if let Some(found_sell_stock) = product_scanner.result_stock_or_sell(choice.clone()) {
@@ -264,32 +286,32 @@ fn main() {
                 let quantity: i32 = found_sell_stock[1].parse().unwrap();
                 match quantity {
                     x if x > 0 => {
-                        email_log.push(LogType::Info(format!("[{}] {}", now, choice)));
+                        report_log.push(LogType::Info(format!("[{}] {}", now, choice)));
                         found_product.stock_product(quantity);
                         product_scanner.weekly_produced += quantity;
                     },
                     x if x < 0 => {
-                        email_log.push(LogType::Info(format!("[{}] {}", now, choice)));
+                        report_log.push(LogType::Info(format!("[{}] {}", now, choice)));
                         found_product.sell_product(quantity);
                         product_scanner.weekly_sold -= quantity;
                     },
                     _ => {
                         found_product.gift_product();
-                        email_log.push(LogType::Info(format!("[{}] {}", now, choice)));
+                        report_log.push(LogType::Info(format!("[{}] {}", now, choice)));
                     },
                 }
                 save_to_json(&product_scanner.product_list);
             }
             else {
                 println!("'{}' is not a product", Paint::red(found_sell_stock[0].as_str()));
-                email_log.push(LogType::Error(format!("[{}] '{}' is not a product", now, found_sell_stock[0].as_str())));
+                report_log.push(LogType::Error(format!("[{}] '{}' is not a product", now, found_sell_stock[0].as_str())));
             }
         }
         // Action code on ADD PRODUCT
         else if let Some(new_product) = product_scanner.result_new_product(choice.clone()) {
             if let Some(_already_exists) = product_scanner.product_by_sku(new_product[0].as_str()) {
                 println!("'{}' already exiists", Paint::red(new_product[0].as_str()));
-                email_log.push(LogType::Error(format!("[{}] '{}' already exiists", now, new_product[0].as_str())));
+                report_log.push(LogType::Error(format!("[{}] '{}' already exiists", now, new_product[0].as_str())));
             }
             else {
                 let new_sku = new_product[0].clone();
@@ -333,12 +355,21 @@ fn main() {
             }
             else {
                 println!("'{}' is not a product", Paint::red(retire_product[0].as_str()));
-                email_log.push(LogType::Error(format!("[{}] '{}' is not a product", now, retire_product[0].as_str())));
+                report_log.push(LogType::Error(format!("[{}] '{}' is not a product", now, retire_product[0].as_str())));
+            }
+        }
+        else if menu_option != MenuItems::Invalid {
+            match menu_option {
+                MenuItems::Report => { println!("Generating report"); product_scanner.build_server_report(report_log.clone()); },
+                MenuItems::Email => println!("Not implemented"),
+                MenuItems::Help => println!("\n\nMenu options:\nReport - Will generate local .html report\nEmail - Will force Email send\nQuit - Exit program"),
+                MenuItems::Quit => return (),
+                MenuItems::Invalid => println!("Unrepresentable"),
             }
         }
         else {
             println!("'{}' is not an action", Paint::red(choice.clone()));
-            email_log.push(LogType::Error(format!("[{}] '{}' is not an action", now, choice.clone())));
+            report_log.push(LogType::Error(format!("[{}] '{}' is not an action", now, choice.clone())));
         }
     }
 

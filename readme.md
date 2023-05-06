@@ -76,4 +76,5 @@ without making such an action.
 
 ## Email Report
 
-This version does not yet have email reporting implemented.
+The current version only supports a local output report. Use the command ```report``` to generate this file. It
+will create or overwrite the file named "report.html" in the root directory.
