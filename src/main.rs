@@ -116,8 +116,8 @@ impl Product {
     fn print_product(&self, trans_type: TransactionType) {
         match trans_type {
             TransactionType::Stock => println!("{} [In Stock: {} Sold: {}]", Paint::green(&self.name), Paint::green(&self.stock), self.sold),
-            TransactionType::Sell => println!("{} [In Stock: {} Sold: {}]", Paint::red(&self.name), self.stock, Paint::red(&self.sold)),
-            TransactionType::Gift => println!("{} [In Stock: {} Sold: {}]", self.name, self.stock, self.sold),
+            TransactionType::Sell => println!("{} [In Stock: {} Sold: {}]", Paint::red(&self.name), Paint::red(&self.stock), Paint::green(&self.sold)),
+            TransactionType::Gift => println!("{} [In Stock: {} Sold: {}]", Paint::yellow(self.name), Paint::red(&self.stock), self.sold),
         }
     }
 }
@@ -265,8 +265,8 @@ fn main() {
     Paint::enable_windows_ascii();
 
     println!("\n---{}--- {}{}", Paint::green("Inventory Server Product Scanner"), Paint::yellow("V."), Paint::yellow(VERSION));
-    println!("Scan '{}' to add a new product.", Paint::blue("Q+[SKU](Product Name)#"));
-    println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::blue("SKU*#"));
+    println!("Scan '{}' to add a new product.", Paint::cyan("Q+[SKU](Product Name)#"));
+    println!("Scan '{}' with +/- numbers for stock/sell respectively.", Paint::cyan("SKU*#"));
 
     loop {
         let now = format!("{}", chrono::offset::Local::now().format("%m/%d/%Y"));
