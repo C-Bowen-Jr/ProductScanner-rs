@@ -117,7 +117,7 @@ impl Product {
         match trans_type {
             TransactionType::Stock => println!("{} [In Stock: {} Sold: {}]", Paint::green(&self.name), Paint::green(&self.stock), self.sold),
             TransactionType::Sell => println!("{} [In Stock: {} Sold: {}]", Paint::red(&self.name), Paint::red(&self.stock), Paint::green(&self.sold)),
-            TransactionType::Gift => println!("{} [In Stock: {} Sold: {}]", Paint::yellow(self.name), Paint::red(&self.stock), self.sold),
+            TransactionType::Gift => println!("{} [In Stock: {} Sold: {}]", Paint::yellow(&self.name), Paint::red(&self.stock), self.sold),
         }
     }
 }
